@@ -274,6 +274,11 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.isAD(r.FormValue("name")) {
+
+		return
+	}
+
 	if responseType == "application/json" {
 		s.generateResponseGoogle(ctx, w, r, req)
 	} else if responseType == "application/dns-message" {
@@ -379,4 +384,14 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (err error) {
 		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())
 	}
 	return err
+}
+
+func (s *Server) isAD(name string) bool {
+	for i := 0; i < len(s.conf.AdDomains); i++ {
+		domain := s.conf.AdDomains[i]
+		if strings.Contains(domain, name) {
+			return true
+		}
+	}
+	return false
 }
