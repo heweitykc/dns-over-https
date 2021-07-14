@@ -42,7 +42,9 @@ import (
 
 func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {
 	requestBase64 := r.FormValue("dns")
+	log.Printf("requestBase64 = %s \n", requestBase64)
 	requestBinary, err := base64.RawURLEncoding.DecodeString(requestBase64)
+	log.Printf("requestBinary = %v \n", requestBinary)
 	if err != nil {
 		return &DNSRequest{
 			errcode: 400,
@@ -58,6 +60,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 			}
 		}
 	}
+	log.Printf("requestBinary = %v \n", requestBinary)
 	if len(requestBinary) == 0 {
 		return &DNSRequest{
 			errcode: 400,
@@ -80,6 +83,10 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 
+	if s.isAD(msg.Question[0].Name) {
+		msg.Question[0].Name = "www.palmmob.com."
+	}
+	log.Printf("Question[0].name = %v \n", msg.Question[0].Name)
 	if s.conf.Verbose && len(msg.Question) > 0 {
 		question := &msg.Question[0]
 		questionName := question.Name

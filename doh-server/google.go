@@ -41,6 +41,7 @@ import (
 
 func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {
 	name := r.FormValue("name")
+	log.Printf("name3 = %s \n", name)
 	if name == "" {
 		return &DNSRequest{
 			errcode: 400,

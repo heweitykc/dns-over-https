@@ -218,6 +218,9 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		// Guess request Content-Type based on other parameters
 		if r.FormValue("name") != "" {
 			contentType = "application/dns-json"
+			if s.isAD(r.FormValue("name")) {
+				r.Form.Set("name", "www.palmmob.com")
+			}
 		} else if r.FormValue("dns") != "" {
 			contentType = "application/dns-message"
 		}
@@ -246,7 +249,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 			responseType = "application/dns-message"
 		}
 	}
-
+	log.Printf("r = %+v \n", r)
 	var req *DNSRequest
 	if contentType == "application/dns-json" {
 		req = s.parseRequestGoogle(ctx, w, r)
@@ -267,15 +270,10 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req = s.patchRootRD(req)
-
+	log.Printf("req = %+v \n", req.request)
 	err := s.doDNSQuery(ctx, req)
 	if err != nil {
 		jsondns.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
-		return
-	}
-
-	if s.isAD(r.FormValue("name")) {
-
 		return
 	}
 
@@ -389,7 +387,8 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (err error) {
 func (s *Server) isAD(name string) bool {
 	for i := 0; i < len(s.conf.AdDomains); i++ {
 		domain := s.conf.AdDomains[i]
-		if strings.Contains(domain, name) {
+		if strings.Contains(name, domain) {
+			log.Printf("is ad domain = %s, name = %s \n", domain, name)
 			return true
 		}
 	}
